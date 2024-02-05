@@ -105,6 +105,7 @@ const Page: React.FC = () => {
             const tokens = getTokens(platform, path);
             allTokens.push(...tokens);
         }
+        
     }
 
     // Sending requests without useEffect
