@@ -15,3 +15,24 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
+
+
+.container {
+  max-width: 1100px;
+  width: 95vw;
+  margin: 0 auto;
+}
+
+.container ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 10px;
+}
+
+.container ul li {
+  padding: 5px;
+  border-radius: 10px;
+  border:1.5px solid black;
+  word-wrap: break-word; /* Forces the text to wrap within its container */
+  word-break: break-all; /* Ensures that long strings are broken and do not overflow */
+}
